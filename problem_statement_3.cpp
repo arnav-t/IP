@@ -170,7 +170,7 @@ int main()
 			}
 		}
 	}
-	putText(imgcont, to_string(corner) + " pointed polygon detected", Point(0,450), FONT_HERSHEY_COMPLEX_SMALL, 0.8, 255, 1, CV_AA);
+	putText(imgcont, to_string(corner) + " pointed polygon detected", Point(0,imgcont.rows - 30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, 255, 1, CV_AA);
 	imshow("Contours", imgcont);
 	cout << "Corner: " << corner << endl;
 	waitKey(0);
