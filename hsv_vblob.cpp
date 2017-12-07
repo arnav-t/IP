@@ -2,7 +2,6 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/core/core.hpp"
 #include <iostream>
-#define IMAGE "rubik.jpg"
 using namespace cv;
 using namespace std;
 
