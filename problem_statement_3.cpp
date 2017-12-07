@@ -119,7 +119,8 @@ void upImg()
 int main()
 {
 	namedWindow("HSV",CV_WINDOW_AUTOSIZE);
-	Mat imgcont(480,640,CV_8UC1,Scalar(0));
+	vid >> img;
+	Mat imgcont(img.rows,img.cols,CV_8UC1,Scalar(0));
 	createTrackbar( "Min", "HSV", &hmin, 179, NULL);
 	createTrackbar( "Max", "HSV", &hmax, 179, NULL);
 	createTrackbar( "Enable", "HSV", &en, 2, NULL);
