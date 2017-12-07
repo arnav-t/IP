@@ -5,20 +5,20 @@
 using namespace cv;
 using namespace std;
 
-int hmax = 100;
-int hmin = 80;
-int en = 0;
+int hmax = 100; // max hue of target
+int hmin = 80; // min hue of target
+int en = 0; // 0 for hue adjustment, 1 for drawing mode, 2 for processing and displaying the resutls
 VideoCapture vid(0);
 Mat img;
 Mat imgo;
 Point bmax,bmin,avg;
-int bSum = 0;
-int bSize = 0;
-int bSizeMax = 0;
-Point bMaxPoint;
-const int bTh = 500;
-vector<Point> contour;
-const float thres = 3.14/6;
+int bSum = 0; // total number of blobs (not used)
+int bSize = 0; // size of current blob
+int bSizeMax = 0; // size of the largest blob
+Point bMaxPoint; // centroid of the largest blob
+const int bTh = 500; // threshold for blob size for it to be considered a suitable target
+vector<Point> contour; // vector for storing centroid points during drawing
+const float thres = 3.14/6; // angular resolution used in hough transform 
 
 bool isValid(int y, int x, Mat i)
 {
@@ -62,7 +62,7 @@ void blobDetect(int y,int x, Mat imgv)
 
 void upImg()
 {
-	bSizeMax = 0;
+	bSizeMax = 0; // reset max blob size for each new fresh frame
 	cvtColor(img,img,CV_BGR2HSV);
 	cvtColor(imgo,imgo,CV_BGR2HSV);
 	Mat imgv(img.rows,img.cols,CV_8UC1,Scalar(0));
