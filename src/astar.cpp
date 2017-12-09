@@ -104,7 +104,6 @@ void aStar(Node p)
 {
 	open.pop();
 	Point currPoint = p.getLocation();
-	cout << "(" << currPoint.y  << ", " << currPoint.x << ") = " << p.heuristicWeight << endl;
 	if(searchClosed(currPoint))
 	{
 		aStar(open.top());
