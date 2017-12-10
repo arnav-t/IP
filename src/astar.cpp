@@ -13,6 +13,7 @@ using namespace std;
 Mat img = imread(IMAGE,1);
 Mat imgg = imread(IMAGE,0);
 int state = 0;
+int hFac = 10;
 Point start, finish;
 
 bool isValid(Point p)
@@ -30,10 +31,14 @@ class Node
 	private:
 		Point location;
 		Node *parent;
-		int weight;
-		int heuristicDist()
+		float weight;
+		float heuristicDist()
 		{
+			//Manhattan Distance
 			return(abs(finish.y - location.y) + abs(finish.x - location.x));
+			
+			//Euclidian Distance
+			//return(sqrt(pow((finish.y - location.y),2) + pow((finish.x - location.x),2)));
 		}
 	public:
 		int heuristicWeight;
@@ -56,7 +61,7 @@ class Node
 		{
 			parent = p;
 			weight = getTrueWeight();
-			heuristicWeight = heuristicDist();
+			heuristicWeight = hFac*heuristicDist() + weight;
 		}
 		void traceToParent()
 		{
@@ -173,6 +178,7 @@ void init(int event, int x, int y, int flags, void* a)
 int main()
 {
 	namedWindow("A*",CV_WINDOW_AUTOSIZE);
+	createTrackbar("Heuristic Factor", "A*", &hFac, 100, NULL);
 	imshow("A*",img);
 	waitKey(1);
 	setMouseCallback("A*", init, NULL);
