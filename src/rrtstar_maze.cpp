@@ -258,6 +258,9 @@ void init(int event, int x, int y, int flags, void* a)
 			}
 			Branch *lastNode = tree->getClosest(finish);
 			Point lastLoc = lastNode->getLocation();
+			tree->drawBranch();
+			circle(img, start, 3, Scalar(0,255,0),CV_FILLED);
+			circle(img, finish, 3, Scalar(0,0,255),CV_FILLED);
 			if(abs(lastLoc.y - finish.y) + abs(lastLoc.x - finish.x) <= traceThreshold)
 				lastNode->traceParent();
 			imshow("RRT*",img);
