@@ -10,7 +10,7 @@ using namespace cv;
 using namespace std;
 const int stepThreshold = 4;
 const int traceThreshold = 10;
-const int maxNodes = 5000;
+const int maxNodes = 12000;
 
 Mat img(SIZE,SIZE,CV_8UC3,Scalar(0,0,0));
 Mat imgg(SIZE,SIZE,CV_8UC1,Scalar(0));
@@ -38,7 +38,7 @@ class Branch
 		{
 			return location;
 		}
-		void addChild(Point l)
+		Branch *addChild(Point l)
 		{
 			Point lAdd;
 			if(abs(location.y - l.y) + abs(location.x - l.x) <= stepThreshold)
@@ -54,7 +54,9 @@ class Branch
 				Branch *newChild = new Branch(lAdd);
 				newChild->setParent(this);
 				children.push_back(newChild);
+				return newChild;
 			}
+			return nullptr;
 		}
 		Branch *getClosest(Point l)
 		{
@@ -77,10 +79,10 @@ class Branch
 		{
 			for(int i=0;i<children.size();++i)
 			{
-				line(img, location, children[i]->getLocation(), Scalar(25,0,0), 1, CV_AA);
+				line(img, location, children[i]->getLocation(), Scalar(50,20,0), 1, CV_AA);
 				children[i]->drawBranch();
 			}
-			circle(img, location, 1, Scalar(0,25,25),CV_FILLED);
+			//circle(img, location, 1, Scalar(0,25,25),CV_FILLED);
 		}
 		void traceParent()
 		{
@@ -118,12 +120,26 @@ void init(int event, int x, int y, int flags, void* a)
 			Branch *tree = new Branch(start);
 			for(int j=0;j<maxNodes;++j)
 			{
-				Point randomPoint(rand()%SIZE,rand()%SIZE);
-				Branch *closestNode = tree->getClosest(randomPoint);
-				closestNode->addChild(randomPoint);
-				tree->drawBranch();
-				imshow("RRT",img);
-				waitKey(1);
+				Branch *child = nullptr;
+				while(child == nullptr)
+				{
+					Point randomPoint(rand()%SIZE,rand()%SIZE);
+					Branch *closestNode = tree->getClosest(randomPoint);
+					child = closestNode->addChild(randomPoint);
+				}
+				if(j%500 == 0)
+				{
+					img = Scalar(0,0,0);
+					for(int y=0;y<SIZE;++y)
+						for(int x=0;x<SIZE;++x)
+							if(imgg.at<uchar>(y,x) == 255)
+								img.at<Vec3b>(y,x) = Vec3b(255,255,255);
+					tree->drawBranch();
+					circle(img, start, 3, Scalar(0,255,0),CV_FILLED);
+					circle(img, finish, 3, Scalar(0,0,255),CV_FILLED);
+					imshow("RRT",img);
+					waitKey(1);
+				}
 			}
 			Branch *lastNode = tree->getClosest(finish);
 			Point lastLoc = lastNode->getLocation();

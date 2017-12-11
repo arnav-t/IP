@@ -1,7 +1,7 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/core/core.hpp"
-#include <vector>
+#include <stack>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
@@ -12,12 +12,15 @@ const int stepThreshold = 4;
 const int traceThreshold = 8;
 const int nbdThreshold = 12;
 const int maxNodes = 12000;
+const int maxCollisions = 500;
 
 Mat img(SIZE,SIZE,CV_8UC3,Scalar(0,0,0));
 Mat imgg(SIZE,SIZE,CV_8UC1,Scalar(0));
 int state = 0;
 Point start, finish, current, previous;
 bool drawing = false;
+bool stop = false;
+int collisions = 0;
 
 class Branch
 {
@@ -61,7 +64,17 @@ class Branch
 		{
 			Point lAdd;
 			if(abs(location.y - l.y) + abs(location.x - l.x) <= stepThreshold)
+			{
+				if(l == location)
+				{
+					l.x += pow(-1,rand());
+					l.y += pow(-1,rand());
+					collisions += 1;
+					if(collisions > maxCollisions)
+						stop = true;
+				}	
 				lAdd = l;
+			}
 			else
 			{
 				float mag = sqrt(pow((l.x - location.x),2) + pow((l.y - location.y),2));
@@ -128,14 +141,14 @@ class Branch
 		}
 };
 
-vector<Branch *> neighbours;
+stack<Branch *> neighbours;
 void Branch::setCheapest(Branch *node, Branch *originalNode)
 {
 	Point l = node->getLocation();
 	Point o = originalNode->getLocation();
 	if(abs(location.y - o.y) + abs(location.x - o.x) < nbdThreshold && node->getLocation() == originalNode->getLocation())
 		if(node->getLocation() != location)
-			neighbours.push_back(this);
+			neighbours.push(this);
 	if(parent == nullptr || abs(location.y - o.y) + abs(location.x - o.x) >= nbdThreshold)
 	{
 		for(int i=0;i<children.size();++i)
@@ -147,9 +160,12 @@ void Branch::setCheapest(Branch *node, Branch *originalNode)
 		int nDist = abs(location.y - l.y) + abs(location.x - l.x);
 		if(nDist + getCost() < node->getCost())
 		{
-			node->getParent()->removeChild(node->getLocation());
-			node->setParent(this);
-			this->appendChild(node);
+			if(node->getParent() != nullptr)
+			{
+				node->getParent()->removeChild(node->getLocation());
+				node->setParent(this);
+				this->appendChild(node);
+			}
 		}
 	}
 	for(int i=0;i<children.size();++i)
@@ -193,26 +209,34 @@ void init(int event, int x, int y, int flags, void* a)
 			waitKey(1);
 			cout << "Creating tree...\n";
 			Branch *tree = new Branch(start);
-			for(int j=0;j<maxNodes;++j)
+			for(int j=0;j<maxNodes && !stop;++j)
 			{
-				Point randomPoint(rand()%SIZE,rand()%SIZE);
-				Branch *closestNode = tree->getClosest(randomPoint);
-				Branch *newChild = closestNode->addChild(randomPoint);
+				Branch *closestNode = nullptr;
+				Branch *newChild = nullptr;
+				while(newChild == nullptr)
+				{
+					Point randomPoint(rand()%SIZE,rand()%SIZE);
+					closestNode = tree->getClosest(randomPoint);
+					newChild = closestNode->addChild(randomPoint);
+				}
 				if(newChild != nullptr)
 				{
-					neighbours.clear();
+					while(!neighbours.empty()) neighbours.pop();
 					tree->setCheapest(newChild,newChild);
 					//cout << neighbours.size() << endl;
-					for(int k=0;k<neighbours.size();++k)
-						tree->setCheapest(neighbours[k],newChild);
+					while(!neighbours.empty())
+					{
+						tree->setCheapest(neighbours.top(),newChild);
+						neighbours.pop();
+					}
 					if(j%500 == 0)
 					{
 						img = Scalar(0,0,0);
-						tree->drawBranch();
 						for(int y=0;y<SIZE;++y)
 							for(int x=0;x<SIZE;++x)
 								if(imgg.at<uchar>(y,x) == 255)
 									img.at<Vec3b>(y,x) = Vec3b(255,255,255);
+						tree->drawBranch();
 						circle(img, start, 3, Scalar(0,255,0),CV_FILLED);
 						circle(img, finish, 3, Scalar(0,0,255),CV_FILLED);
 						imshow("RRT*",img);
