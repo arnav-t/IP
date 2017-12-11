@@ -8,10 +8,10 @@
 #define SIZE 512
 using namespace cv;
 using namespace std;
-const int stepThreshold = 4;
+const int stepThreshold = 8;
 const int traceThreshold = 8;
-const int nbdThreshold = 12;
-const int maxNodes = 12000;
+const int nbdThreshold = 18;
+const int maxNodes = 8000;
 const int maxCollisions = 500;
 
 Mat img(SIZE,SIZE,CV_8UC3,Scalar(0,0,0));
@@ -51,14 +51,26 @@ class Branch
 		}
 		int getCost()
 		{
-			if(parent == nullptr)
+			/*if(parent == nullptr)
 			{
 				cost = 0;
 				return 0;
 			}
 			Point pL = parent->getLocation();
-			cost = abs(location.y - pL.y) + abs(location.x - pL.x) + parent->getCost();
+			cost = abs(location.y - pL.y) + abs(location.x - pL.x) + parent->getCost();*/
 			return cost;
+		}
+		void setCost()
+		{
+			if(parent == nullptr)
+				cost = 0;
+			else
+			{
+				Point pL = parent->getLocation();
+				cost = abs(location.y - pL.y) + abs(location.x - pL.x) + parent->getCost();
+				for(int n=0;n<children.size();++n)
+					children[n]->setCost();
+			}
 		}
 		Branch *addChild(Point l)
 		{
@@ -86,7 +98,7 @@ class Branch
 				Branch *newChild = new Branch(lAdd);
 				newChild->setParent(this);
 				children.push_back(newChild);
-				newChild->getCost();
+				newChild->setCost();
 				return newChild;
 			}
 			return nullptr;
@@ -94,6 +106,7 @@ class Branch
 		void appendChild(Branch *child)
 		{
 			children.push_back(child);
+			child->setCost();
 		}
 		void removeChild(Point l)
 		{
@@ -126,7 +139,7 @@ class Branch
 		{
 			for(int i=0;i<children.size();++i)
 			{
-				line(img, location, children[i]->getLocation(), Scalar(50,20,0), 1, CV_AA);
+				line(img, location, children[i]->getLocation(), Scalar(80,60,0), 1, CV_AA);
 				children[i]->drawBranch();
 			}
 			//circle(img, location, 1, Scalar(0,25,25),CV_FILLED);
@@ -262,8 +275,8 @@ void init(int event, int x, int y, int flags, void* a)
 		drawing = false;
 	if(drawing)
 	{
-		line(img, previous, current, Scalar(255,255,255), 10, CV_AA);
-		line(imgg, previous, current, 255, 10, CV_AA);
+		line(img, previous, current, Scalar(255,255,255), 15, CV_AA);
+		line(imgg, previous, current, 255, 15, CV_AA);
 		previous = current;
 		imshow("RRT*",img);
 		waitKey(1);

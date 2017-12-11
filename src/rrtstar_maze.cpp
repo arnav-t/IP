@@ -50,14 +50,26 @@ class Branch
 		}
 		int getCost()
 		{
-			if(parent == nullptr)
+			/*if(parent == nullptr)
 			{
 				cost = 0;
 				return 0;
-			}
-			Point pL = parent->getLocation();
-			cost = abs(location.y - pL.y) + abs(location.x - pL.x) + parent->getCost();
+			}*/
+			//Point pL = parent->getLocation();
+			//cost = abs(location.y - pL.y) + abs(location.x - pL.x) + parent->getCost();
 			return cost;
+		}
+		void setCost()
+		{
+			if(parent == nullptr)
+				cost = 0;
+			else
+			{
+				Point pL = parent->getLocation();
+				cost = abs(location.y - pL.y) + abs(location.x - pL.x) + parent->getCost();
+				for(int n=0;n<children.size();++n)
+					children[n]->setCost();
+			}
 		}
 		Branch *addChild(Point l)
 		{
@@ -85,7 +97,8 @@ class Branch
 				Branch *newChild = new Branch(lAdd);
 				newChild->setParent(this);
 				children.push_back(newChild);
-				newChild->getCost();
+				newChild->setCost();
+				//newChild->getCost();
 				return newChild;
 			}
 			return nullptr;
@@ -93,6 +106,7 @@ class Branch
 		void appendChild(Branch *child)
 		{
 			children.push_back(child);
+			child->setCost();
 		}
 		void removeChild(Point l)
 		{
